@@ -1,0 +1,6 @@
+[phases.setup]
+nixPkgs = ["poppler_utils"]
+
+[start]
+cmd = "node server.js"
+
