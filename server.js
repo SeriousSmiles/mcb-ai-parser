@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { OpenAI } = require('openai');
+const sharp = require('sharp');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,14 +13,13 @@ const PORT = process.env.PORT || 3000;
 const upload = multer({ dest: 'uploads/' });
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Helper: safely parse possibly broken JSON
 function trySafeJsonParse(text) {
   try {
     return JSON.parse(text);
   } catch {
     const first = text.indexOf('{');
     const last = text.lastIndexOf('}');
-    if (first !== -1 && last !== -1 && last > first) {
+    if (first !== -1 && last > first) {
       try {
         return JSON.parse(text.slice(first, last + 1));
       } catch {
@@ -35,10 +35,8 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
     const filePath = req.file.path;
     const outputPath = `${filePath}-images`;
 
-    // Create output folder
     fs.mkdirSync(outputPath, { recursive: true });
 
-    // Convert PDF to image(s)
     const command = `pdftoppm -jpeg -scale-to 1024 ${filePath} ${outputPath}/page`;
     execSync(command);
     console.log("✅ PDF converted to images");
@@ -47,12 +45,15 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
       .filter(f => f.endsWith('.jpg'))
       .map(f => path.join(outputPath, f));
 
-    const results = [];
-
-    for (let imgPath of imagePaths) {
+    const results = await Promise.all(imagePaths.map(async (imgPath) => {
       const imageBuffer = fs.readFileSync(imgPath);
 
-      console.log(`📤 Sending image to OpenAI: ${imgPath}`);
+      const compressedImage = await sharp(imageBuffer)
+        .resize({ width: 900 })
+        .jpeg({ quality: 60 })
+        .toBuffer();
+
+      console.log(`📤 Sending compressed image to OpenAI: ${imgPath}`);
 
       const response = await openai.chat.completions.create({
         model: 'gpt-4o',
@@ -93,7 +94,7 @@ Return only a valid JSON object like this:
               {
                 type: "image_url",
                 image_url: {
-                  url: `data:image/jpeg;base64,${imageBuffer.toString('base64')}`
+                  url: `data:image/jpeg;base64,${compressedImage.toString('base64')}`
                 }
               }
             ]
@@ -104,13 +105,11 @@ Return only a valid JSON object like this:
 
       const rawText = response.choices[0].message.content || '';
       const cleanText = rawText.replace(/```json\n?/, '').replace(/```/, '');
-      const parsed = trySafeJsonParse(cleanText);
-      results.push(parsed);
-    }
+      return trySafeJsonParse(cleanText);
+    }));
 
     res.json({ extracted: results });
 
-    // Clean up
     fs.rmSync(filePath, { force: true });
     fs.rmSync(outputPath, { recursive: true, force: true });
 
