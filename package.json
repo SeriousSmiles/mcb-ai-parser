@@ -1,0 +1,27 @@
+{
+  "name": "mcb-pdf-parser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SeriousSmiles/mcb-ai-parser.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/SeriousSmiles/mcb-ai-parser/issues"
+  },
+  "homepage": "https://github.com/SeriousSmiles/mcb-ai-parser#readme",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "multer": "^2.0.1",
+    "openai": "^5.6.0"
+  }
+}
