@@ -1,5 +1,8 @@
+[build]
+builder = "NIXPACKS"
+
 [phases.setup]
-nixPkgs = ["poppler_utils"]
+nixPkgs = ["nodejs_18", "poppler_utils"]
 
 [start]
 cmd = "node server.js"
