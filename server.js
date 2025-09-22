@@ -63,32 +63,47 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
             content: [
               {
                 type: "text",
-                text: `You are a financial assistant helping parse a Curaçao bank statement.
-Extract all bank transactions from this image.
+                text: `You are an expert assistant that reads CVs and resumes from images or PDFs and extracts structured data for a career platform.
 
-Each transaction:
-- may span 2-3 lines (e.g., card number, extra notes),
-- must include ALL description lines as one "description" field,
-- may include either a debit or credit (not both),
-- has a final balance (like "1.769,87CR").
+Extract the following fields from the document:
+- Full Name
+- Contact Info (email, phone, LinkedIn)
+- Job Title(s)
+- Work Experience (each with title, company, duration, description)
+- Education (degree, school, graduation year)
+- Skills (bullet list)
+- Certifications (if any)
+- Languages
+- Location (City, Country if available)
 
-Also extract the statement's month and year from the top of the page.
+Return the output in JSON format like this:
 
-Return only a valid JSON object like this:
 {
-  "meta": {
-    "month": "February",
-    "year": "2024"
+  "full_name": "John Doe",
+  "contact": {
+    "email": "john@example.com",
+    "phone": "+599 9 123-4567",
+    "linkedin": "linkedin.com/in/johndoe"
   },
-  "transactions": [
+  "work_experience": [
     {
-      "date": "13/02",
-      "description": "MCB Money card USD ************7386 Neff ps4 gift card 10 dollars",
-      "debit": "18,20",
-      "credit": "",
-      "balance": "1.109,11CR"
+      "title": "Marketing Manager",
+      "company": "ABC Corp",
+      "duration": "Jan 2021 – Present",
+      "description": "Managed campaigns, increased conversion by 20%..."
     }
-  ]
+  ],
+  "education": [
+    {
+      "degree": "Bachelor of Science in Marketing",
+      "school": "University of Curaçao",
+      "year": "2020"
+    }
+  ],
+  "skills": ["SEO", "Data Analysis", "Copywriting"],
+  "certifications": ["Google Ads Certification"],
+  "languages": ["English", "Papiamentu"],
+  "location": "Curaçao"
 }`
               },
               {
