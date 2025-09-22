@@ -32,12 +32,18 @@ function trySafeJsonParse(text) {
 
 app.post('/upload', upload.single('pdf'), async (req, res) => {
   try {
+    if (!req.file) {
+      throw new Error("❌ No file received. Ensure form-data field is named 'pdf'.");
+    }
+
     const filePath = req.file.path;
     const outputPath = `${filePath}-images`;
 
+    console.log(`📥 Received file: ${filePath}`);
     fs.mkdirSync(outputPath, { recursive: true });
 
     const command = `pdftoppm -jpeg -scale-to 1024 ${filePath} ${outputPath}/page`;
+    console.log(`🔧 Running command: ${command}`);
     execSync(command);
     console.log("✅ PDF converted to images");
 
@@ -123,18 +129,19 @@ Return the output in JSON format like this:
       return trySafeJsonParse(cleanText);
     }));
 
+    console.log("✅ AI Parsing Complete. Sending response...");
     res.json({ extracted: results });
 
+    // Clean up files
     fs.rmSync(filePath, { force: true });
     fs.rmSync(outputPath, { recursive: true, force: true });
 
   } catch (err) {
     console.error("❌ Error processing file:", err);
-    res.status(500).json({ error: 'Failed to process file' });
+    res.status(500).json({ error: err.message || 'Failed to process file' });
   }
 });
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
-
